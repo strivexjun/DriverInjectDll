@@ -400,6 +400,8 @@ VOID INJECT_ROUTINE_X86(
 	KeStackAttachProcess(process, &apc);
 	attach = true;
 
+	ObDereferenceObject(process);
+
 	//
 	//2.找导出表ZwTestAlert
 	//
@@ -623,6 +625,8 @@ VOID INJECT_ROUTINE_X64(
 	trace = 2;
 	KeStackAttachProcess(process, &apc);
 	attach = true;
+
+	ObDereferenceObject(process);
 
 	//
 	//2.找导出表ZwTestAlert
