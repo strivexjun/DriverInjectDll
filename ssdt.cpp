@@ -69,19 +69,20 @@ static SSDTStruct* SSDTfind()
     return SSDT;
 }
 
+
 PVOID SSDT::GetFunctionAddress(const char* apiname)
 {
     //read address from SSDT
     SSDTStruct* SSDT = SSDTfind();
     if(!SSDT)
     {
-        DbgPrint("[DeugMessage] SSDT not found...\r\n");
+        DPRINT("[DeugMessage] SSDT not found...\r\n");
         return 0;
     }
     ULONG_PTR SSDTbase = (ULONG_PTR)SSDT->pServiceTable;
     if(!SSDTbase)
     {
-        DbgPrint("[DeugMessage] ServiceTable not found...\r\n");
+        DPRINT("[DeugMessage] ServiceTable not found...\r\n");
         return 0;
     }
     ULONG readOffset = NTDLL::GetExportSsdtIndex(apiname);
@@ -89,7 +90,7 @@ PVOID SSDT::GetFunctionAddress(const char* apiname)
         return 0;
     if(readOffset >= SSDT->NumberOfServices)
     {
-        DbgPrint("[DeugMessage] Invalid read offset...\r\n");
+        DPRINT("[DeugMessage] Invalid read offset...\r\n");
         return 0;
     }
 #ifdef _WIN64
@@ -141,13 +142,13 @@ HOOK SSDT::Hook(const char* apiname, void* newfunc)
     SSDTStruct* SSDT = SSDTfind();
     if(!SSDT)
     {
-        DbgPrint("[DeugMessage] SSDT not found...\r\n");
+        DPRINT("[DeugMessage] SSDT not found...\r\n");
         return 0;
     }
     ULONG_PTR SSDTbase = (ULONG_PTR)SSDT->pServiceTable;
     if(!SSDTbase)
     {
-        DbgPrint("[DeugMessage] ServiceTable not found...\r\n");
+        DPRINT("[DeugMessage] ServiceTable not found...\r\n");
         return 0;
     }
     int FunctionIndex = NTDLL::GetExportSsdtIndex(apiname);
@@ -155,7 +156,7 @@ HOOK SSDT::Hook(const char* apiname, void* newfunc)
         return 0;
     if((ULONGLONG)FunctionIndex >= SSDT->NumberOfServices)
     {
-        DbgPrint("[DeugMessage] Invalid API offset...\r\n");
+        DPRINT("[DeugMessage] Invalid API offset...\r\n");
         return 0;
     }
 
@@ -179,31 +180,32 @@ HOOK SSDT::Hook(const char* apiname, void* newfunc)
     {
         ULONG_PTR Lowest = SSDTbase;
         ULONG_PTR Highest = Lowest + 0x0FFFFFFF;
-        DbgPrint("[DeugMessage] Range: 0x%p-0x%p\r\n", Lowest, Highest);
+		UNREFERENCED_PARAMETER(Highest);
+        DPRINT("[DeugMessage] Range: 0x%p-0x%p\r\n", Lowest, Highest);
         CodeSize = 0;
         CodeStart = PE::GetPageBase(Undocumented::GetKernelBase(), &CodeSize, (PVOID)((oldValue >> 4) + SSDTbase));
         if(!CodeStart || !CodeSize)
         {
-            DbgPrint("[DeugMessage] PeGetPageBase failed...\r\n");
+            DPRINT("[DeugMessage] PeGetPageBase failed...\r\n");
             return 0;
         }
-        DbgPrint("[DeugMessage] CodeStart: 0x%p, CodeSize: 0x%X\r\n", CodeStart, CodeSize);
+        DPRINT("[DeugMessage] CodeStart: 0x%p, CodeSize: 0x%X\r\n", CodeStart, CodeSize);
         if((ULONG_PTR)CodeStart < Lowest)  //start of the page is out of range (impossible, but whatever)
         {
             CodeSize -= (ULONG)(Lowest - (ULONG_PTR)CodeStart);
             CodeStart = (PVOID)Lowest;
-            DbgPrint("[DeugMessage] CodeStart: 0x%p, CodeSize: 0x%X\r\n", CodeStart, CodeSize);
+            DPRINT("[DeugMessage] CodeStart: 0x%p, CodeSize: 0x%X\r\n", CodeStart, CodeSize);
         }
-        DbgPrint("[DeugMessage] Range: 0x%p-0x%p\r\n", CodeStart, (ULONG_PTR)CodeStart + CodeSize);
+        DPRINT("[DeugMessage] Range: 0x%p-0x%p\r\n", CodeStart, (ULONG_PTR)CodeStart + CodeSize);
     }
 
     PVOID CaveAddress = FindCaveAddress(CodeStart, CodeSize, sizeof(HOOKOPCODES));
     if(!CaveAddress)
     {
-        DbgPrint("[DeugMessage] FindCaveAddress failed...\r\n");
+        DPRINT("[DeugMessage] FindCaveAddress failed...\r\n");
         return 0;
     }
-    DbgPrint("[DeugMessage] CaveAddress: 0x%p\r\n", CaveAddress);
+    DPRINT("[DeugMessage] CaveAddress: 0x%p\r\n", CaveAddress);
 
     hHook = Hooklib::Hook(CaveAddress, (void*)newfunc);
     if(!hHook)
@@ -237,7 +239,7 @@ HOOK SSDT::Hook(const char* apiname, void* newfunc)
 
     InterlockedSet(&SSDT->pServiceTable[FunctionIndex], newValue);
 
-    DbgPrint("[DeugMessage] SSDThook(%s:0x%p, 0x%p)\r\n", apiname, hHook->SSDTold, hHook->SSDTnew);
+    DPRINT("[DeugMessage] SSDThook(%s:0x%p, 0x%p)\r\n", apiname, hHook->SSDTold, hHook->SSDTnew);
 
     return hHook;
 }
@@ -249,13 +251,13 @@ void SSDT::Hook(HOOK hHook)
     SSDTStruct* SSDT = SSDTfind();
     if(!SSDT)
     {
-        DbgPrint("[DeugMessage] SSDT not found...\r\n");
+        DPRINT("[DeugMessage] SSDT not found...\r\n");
         return;
     }
     LONG* SSDT_Table = SSDT->pServiceTable;
     if(!SSDT_Table)
     {
-        DbgPrint("[DeugMessage] ServiceTable not found...\r\n");
+        DPRINT("[DeugMessage] ServiceTable not found...\r\n");
         return;
     }
     InterlockedSet(&SSDT_Table[hHook->SSDTindex], hHook->SSDTnew);
@@ -268,13 +270,13 @@ void SSDT::Unhook(HOOK hHook, bool free)
     SSDTStruct* SSDT = SSDTfind();
     if(!SSDT)
     {
-        DbgPrint("[DeugMessage] SSDT not found...\r\n");
+        DPRINT("[DeugMessage] SSDT not found...\r\n");
         return;
     }
     LONG* SSDT_Table = SSDT->pServiceTable;
     if(!SSDT_Table)
     {
-        DbgPrint("[DeugMessage] ServiceTable not found...\r\n");
+        DPRINT("[DeugMessage] ServiceTable not found...\r\n");
         return;
     }
     InterlockedSet(&SSDT_Table[hHook->SSDTindex], hHook->SSDTold);

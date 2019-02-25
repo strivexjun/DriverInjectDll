@@ -386,7 +386,7 @@ PVOID Undocumented::GetKernelBase(PULONG pImageSize)
 
     if(!SystemInfoBufferSize)
     {
-        DbgPrint("[DeugMessage] ZwQuerySystemInformation (1) failed...\r\n");
+        DPRINT("[DeugMessage] ZwQuerySystemInformation (1) failed...\r\n");
         return NULL;
     }
 
@@ -394,7 +394,7 @@ PVOID Undocumented::GetKernelBase(PULONG pImageSize)
 
     if(!pSystemInfoBuffer)
     {
-        DbgPrint("[DeugMessage] ExAllocatePool failed...\r\n");
+        DPRINT("[DeugMessage] ExAllocatePool failed...\r\n");
         return NULL;
     }
 
@@ -412,7 +412,7 @@ PVOID Undocumented::GetKernelBase(PULONG pImageSize)
             *pImageSize = pSystemInfoBuffer->Module[0].ImageSize;
     }
     else
-        DbgPrint("[DeugMessage] ZwQuerySystemInformation (2) failed...\r\n");
+        DPRINT("[DeugMessage] ZwQuerySystemInformation (2) failed...\r\n");
 
     ExFreePool(pSystemInfoBuffer);
 

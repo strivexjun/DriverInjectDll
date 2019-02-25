@@ -47,14 +47,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Win7 Debug|x64'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
     <OutDir>$(SolutionDir)\bin\</OutDir>
-    <IntDir>Temp\$(ProjectName)\$(Platform)\$(ConfigurationName)\</IntDir>
+    <IntDir>$(SolutionDir)\Temp\$(ProjectName)\$(Configuration)\</IntDir>
     <TargetName>$(TargetName.Replace(' ',''))_x64_d</TargetName>
     <EnableInf2cat>false</EnableInf2cat>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Win7 Release|x64'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
     <TargetName>$(TargetName.Replace(' ',''))_x64</TargetName>
-    <IntDir>Temp\$(ProjectName)\$(Platform)\$(ConfigurationName)\</IntDir>
+    <IntDir>$(SolutionDir)\Temp\$(ProjectName)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\bin\</OutDir>
     <EnableInf2cat>false</EnableInf2cat>
   </PropertyGroup>

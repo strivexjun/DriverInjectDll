@@ -17,7 +17,7 @@ NTSTATUS NTDLL::Initialize()
     if(KeGetCurrentIrql() != PASSIVE_LEVEL)
     {
 #ifdef _DEBUG
-        DbgPrint("[DeugMessage] KeGetCurrentIrql != PASSIVE_LEVEL!\n");
+        DPRINT("[DeugMessage] KeGetCurrentIrql != PASSIVE_LEVEL!\n");
 #endif
         return STATUS_UNSUCCESSFUL;
     }
@@ -40,7 +40,7 @@ NTSTATUS NTDLL::Initialize()
         if(NT_SUCCESS(NtStatus))
         {
             FileSize = StandardInformation.EndOfFile.LowPart;
-            DbgPrint("[DeugMessage] FileSize of ntdll.dll is %08X!\r\n", StandardInformation.EndOfFile.LowPart);
+            DPRINT("[DeugMessage] FileSize of ntdll.dll is %08X!\r\n", StandardInformation.EndOfFile.LowPart);
             FileData = (unsigned char*)RtlAllocateMemory(true, FileSize);
 
             LARGE_INTEGER ByteOffset;
@@ -55,15 +55,15 @@ NTSTATUS NTDLL::Initialize()
             if(!NT_SUCCESS(NtStatus))
             {
                 RtlFreeMemory(FileData);
-                DbgPrint("[DeugMessage] ZwReadFile failed with status %08X...\r\n", NtStatus);
+                DPRINT("[DeugMessage] ZwReadFile failed with status %08X...\r\n", NtStatus);
             }
         }
         else
-            DbgPrint("[DeugMessage] ZwQueryInformationFile failed with status %08X...\r\n", NtStatus);
+            DPRINT("[DeugMessage] ZwQueryInformationFile failed with status %08X...\r\n", NtStatus);
         ZwClose(FileHandle);
     }
     else
-        DbgPrint("[DeugMessage] ZwCreateFile failed with status %08X...\r\n", NtStatus);
+        DPRINT("[DeugMessage] ZwCreateFile failed with status %08X...\r\n", NtStatus);
     return NtStatus;
 }
 
@@ -93,7 +93,7 @@ int NTDLL::GetExportSsdtIndex(const char* ExportName)
 
     if(SsdtOffset == -1)
     {
-        DbgPrint("[DeugMessage] SSDT Offset for %s not found...\r\n", ExportName);
+        DPRINT("[DeugMessage] SSDT Offset for %s not found...\r\n", ExportName);
     }
 
     return SsdtOffset;

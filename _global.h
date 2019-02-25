@@ -21,6 +21,13 @@ extern "C"
 }
 #endif
 
+
+#ifdef DBG
+#define DPRINT(...) DbgPrint(__VA_ARGS__)
+#else
+#define DPRINT(...)
+#endif
+
 void* RtlAllocateMemory(bool InZeroMemory, SIZE_T InSize);
 void RtlFreeMemory(void* InPointer);
 NTSTATUS RtlSuperCopyMemory(IN VOID UNALIGNED* Destination, IN CONST VOID UNALIGNED* Source, IN ULONG Length);

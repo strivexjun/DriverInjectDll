@@ -15,16 +15,17 @@ Tell the driver to inject DLL binary data
 #### Loader
 Shelcode for Memory Loaded DLL
 
-dll_x86.h -> inject x86 process dll bin binary data
-
-dll_x86.h -> inject x64 process dll bin binary data
+#### MyDll
+TODO: Judging Injected Process Name in DLLMain
 
 # Build
 vs2008-vs2017
+
 wdk7-wdk10
 
 # How Use
 step1: install and start driver program
+
 step2: run Input_dll.exe
 
 # screen snapshot 
