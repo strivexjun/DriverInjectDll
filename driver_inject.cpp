@@ -446,11 +446,11 @@ VOID INJECT_ROUTINE_X86(
 	{
 		goto __exit;
 	}
+	ObDereferenceObject(process);
+
 	trace = 2;
 	KeStackAttachProcess(process, &apc);
 	attach = true;
-
-	ObDereferenceObject(process);
 
 	//
 	//2.找导出表ZwContinue
@@ -672,11 +672,11 @@ VOID INJECT_ROUTINE_X64(
 	{
 		goto __exit;
 	}
+	ObDereferenceObject(process);
+
 	trace = 2;
 	KeStackAttachProcess(process, &apc);
 	attach = true;
-
-	ObDereferenceObject(process);
 
 	//
 	//2.找导出表ZwContinue
@@ -993,9 +993,8 @@ VOID LoadImageNotify(
 			ObDereferenceObject(thread_object);
 		}
 
-		NtClose(thread_hanlde);
+		ZwClose(thread_hanlde);
 	}
-
 
 }
 
