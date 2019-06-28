@@ -22,7 +22,7 @@ static UNICODE_STRING Win32Device;
     CTL_CODE(FILE_DEVICE_UNKNOWN, 0x901, METHOD_IN_DIRECT, FILE_ANY_ACCESS)
 
 //
-//ÒıÈëº¯Êı
+//å¼•å…¥å‡½æ•°
 //
 extern "C"
 NTKERNELAPI
@@ -36,7 +36,7 @@ NTSTATUS NTAPI PsLookupProcessByProcessId(
 );
 
 //
-//×¢ÈëÁĞ±í½á¹¹Ìå
+//æ³¨å…¥åˆ—è¡¨ç»“æ„ä½“
 //
 typedef NTSTATUS(NTAPI* fn_NtAllocateVirtualMemory)(
 	_In_ HANDLE ProcessHandle,
@@ -70,19 +70,19 @@ typedef NTSTATUS(NTAPI* fn_NtProtectVirtualMemory)(
 	);
 
 
-typedef struct _INJECT_PROCESSID_LIST {			//×¢ÈëÁĞ±íĞÅÏ¢
+typedef struct _INJECT_PROCESSID_LIST {			//æ³¨å…¥åˆ—è¡¨ä¿¡æ¯
 	LIST_ENTRY	link;
 	HANDLE pid;
 	BOOLEAN	inject;
 }INJECT_PROCESSID_LIST, *PINJECT_PROCESSID_LIST;
 
-typedef struct _INJECT_PROCESSID_DATA {			//×¢Èë½ø³ÌÊı¾İĞÅÏ¢
+typedef struct _INJECT_PROCESSID_DATA {			//æ³¨å…¥è¿›ç¨‹æ•°æ®ä¿¡æ¯
 	HANDLE	pid;
 	PVOID	imagebase;
 	SIZE_T	imagesize;
 }INJECT_PROCESSID_DATA, *PINJECT_PROCESSID_DATA;
 
-typedef struct _INJECT_PROCESSID_DLL {			//ÄÚ´æ¼ÓÔØDLLĞÅÏ¢
+typedef struct _INJECT_PROCESSID_DLL {			//å†…å­˜åŠ è½½DLLä¿¡æ¯
 	PVOID	x64dll;
 	ULONG	x64dllsize;
 	PVOID	x86dll;
@@ -132,7 +132,7 @@ typedef struct _INJECT_PROCESSID_PAYLOAD_X64 {
 #pragma pack(pop)
 
 //
-//È«¾Ö½ø³ÌÁ´±í
+//å…¨å±€è¿›ç¨‹é“¾è¡¨
 //
 INJECT_PROCESSID_LIST	g_injectList;
 INJECT_PROCESSID_DLL	g_injectDll;
@@ -146,11 +146,11 @@ fn_NtWriteVirtualMemory		pfn_NtWriteVirtualMemory;
 fn_NtProtectVirtualMemory	pfn_NtProtectVirtualMemory;
 
 //
-//Í¨¹ıpid²éÑ¯½ø³ÌÊÇ·ñÒÑ¾­×¢Èë
+//é€šè¿‡pidæŸ¥è¯¢è¿›ç¨‹æ˜¯å¦å·²ç»æ³¨å…¥
 //
 BOOLEAN QueryInjectListStatus(HANDLE	processid)
 {
-	BOOLEAN result = FALSE;
+	BOOLEAN result = TRUE;
 
 	KeEnterCriticalRegion();
 	ExAcquireResourceSharedLite(&g_ResourceMutex, TRUE);
@@ -162,9 +162,9 @@ BOOLEAN QueryInjectListStatus(HANDLE	processid)
 	{
 		if (next->pid == processid)
 		{
-			if (next->inject == TRUE)
+			if (next->inject == FALSE)
 			{
-				result = TRUE;
+				result = FALSE;
 			}
 			
 			break;
@@ -181,7 +181,7 @@ BOOLEAN QueryInjectListStatus(HANDLE	processid)
 }
 
 //
-//ÉèÖÃpid ×¢Èë×´Ì¬ÎªÒÑ×¢Èë
+//è®¾ç½®pid æ³¨å…¥çŠ¶æ€ä¸ºå·²æ³¨å…¥
 //
 VOID SetInjectListStatus(HANDLE	processid)
 {
@@ -209,7 +209,7 @@ VOID SetInjectListStatus(HANDLE	processid)
 }
 
 //
-//Ìí¼Ópid µ½×¢ÈëÁĞ±í
+//æ·»åŠ pid åˆ°æ³¨å…¥åˆ—è¡¨
 //
 VOID AddInjectList(HANDLE processid)
 {
@@ -235,7 +235,7 @@ VOID AddInjectList(HANDLE processid)
 }
 
 //
-//½ø³ÌÍË³ö ÊÍ·ÅpidÁ´±í
+//è¿›ç¨‹é€€å‡º é‡Šæ”¾pidé“¾è¡¨
 //
 VOID DeleteInjectList(HANDLE processid)
 {
@@ -367,7 +367,7 @@ ULONG_PTR GetProcAddressR(ULONG_PTR hModule, const char* lpProcName, bool x64Mod
 }
 
 //
-// ËÑË÷×Ö·û´®,À´×Ôblackbone
+// æœç´¢å­—ç¬¦ä¸²,æ¥è‡ªblackbone
 //
 LONG SafeSearchString(IN PUNICODE_STRING source, IN PUNICODE_STRING target, IN BOOLEAN CaseInSensitive)
 {
@@ -398,7 +398,7 @@ LONG SafeSearchString(IN PUNICODE_STRING source, IN PUNICODE_STRING target, IN B
 }
 
 //
-//×¢ÈëÏß³Ì
+//æ³¨å…¥çº¿ç¨‹
 //
 VOID INJECT_ROUTINE_X86(
 	_In_ PVOID StartContext)
@@ -406,11 +406,11 @@ VOID INJECT_ROUTINE_X86(
 
 	PINJECT_PROCESSID_DATA	injectdata = (PINJECT_PROCESSID_DATA)StartContext;
 
-	DPRINT("x86×¢Èë pid=%d %p\n", injectdata->pid, injectdata->imagebase);
+	DPRINT("x86æ³¨å…¥ pid=%d %p\n", injectdata->pid, injectdata->imagebase);
 
 
 	//
-	//1.attach½ø³Ì£¬2.ÕÒµ¼³ö±íZwContinue 3.×éºÏshellcode 4.ÉêÇëÄÚ´æ  5.Hook ZwContinue 
+	//1.attachè¿›ç¨‹ï¼Œ2.æ‰¾å¯¼å‡ºè¡¨ZwContinue 3.ç»„åˆshellcode 4.ç”³è¯·å†…å­˜  5.Hook ZwContinue 
 	//
 
 	ULONG			trace = 1;
@@ -439,7 +439,7 @@ VOID INJECT_ROUTINE_X86(
 	//KdBreakPoint();
 
 	//
-	//1.attach½ø³Ì
+	//1.attachè¿›ç¨‹
 	//
 	status = PsLookupProcessByProcessId(injectdata->pid, &process);
 	if (!NT_SUCCESS(status) && process == NULL)
@@ -453,7 +453,7 @@ VOID INJECT_ROUTINE_X86(
 	attach = true;
 
 	//
-	//2.ÕÒµ¼³ö±íZwContinue
+	//2.æ‰¾å¯¼å‡ºè¡¨ZwContinue
 	//
 	pfnZwContinue = (ULONG)GetProcAddressR((ULONG_PTR)injectdata->imagebase, "ZwContinue", false);
 	if (pfnZwContinue == NULL)
@@ -476,7 +476,7 @@ VOID INJECT_ROUTINE_X86(
 
 
 	//
-	//3.¼ÆËãshellcode ´óĞ¡
+	//3.è®¡ç®—shellcode å¤§å°
 	//
 	alloc_size = sizeof(INJECT_PROCESSID_PAYLOAD_X86) + sizeof(MemLoadShellcode_x86) + g_injectDll.x86dllsize;
 
@@ -507,7 +507,7 @@ VOID INJECT_ROUTINE_X86(
 
 
 	//
-	//4.ÉêÇëÄÚ´æ
+	//4.ç”³è¯·å†…å­˜
 	//
 	status = pfn_NtAllocateVirtualMemory(NtCurrentProcess(),
 		&alloc_ptr,
@@ -524,29 +524,29 @@ VOID INJECT_ROUTINE_X86(
 	//5. Hook ZwContinue 
 	//
 
-	//¼ÆËãdll ºÍshellcodeÎ»ÖÃ
+	//è®¡ç®—dll å’Œshellcodeä½ç½®
 	dllPos = PtrToUlong(alloc_ptr) + sizeof(INJECT_PROCESSID_PAYLOAD_X86) - 2;
 	shellcodePos = dllPos + g_injectDll.x86dllsize;
 
-	//»Ö¸´hook
+	//æ¢å¤hook
 	dwTmpBuf = sizeof(payload.oldData);
 	memcpy(&payload.restoneHook[1], &dwTmpBuf, sizeof(ULONG));
 	dwTmpBuf = PtrToUlong(alloc_ptr) + (sizeof(INJECT_PROCESSID_PAYLOAD_X86) - 7);
 	memcpy(&payload.restoneHook[6], &dwTmpBuf, sizeof(ULONG));
 	memcpy(&payload.restoneHook[11], &pfnZwContinue, sizeof(ULONG));
 
-	//µ÷ÓÃÄÚ´æ¼ÓÔØ
+	//è°ƒç”¨å†…å­˜åŠ è½½
 	memcpy(&payload.invokeMemLoad[1], &dllPos, sizeof(ULONG));
 	dwTmpBuf = shellcodePos - (PtrToUlong(alloc_ptr) + 24) - 5;
 	memcpy(&payload.invokeMemLoad[6], &dwTmpBuf, sizeof(ULONG));
 
 
-	//²Á³ıDLL
+	//æ“¦é™¤DLL
 	dwTmpBuf = sizeof(MemLoadShellcode_x86) + g_injectDll.x86dllsize;
 	memcpy(&payload.eraseDll[3], &dwTmpBuf, sizeof(ULONG));
 	memcpy(&payload.eraseDll[8], &dllPos, sizeof(ULONG));
 
-	//Ìø»ØÈ¥
+	//è·³å›å»
 	dwTmpBuf = (ULONG)pfnZwContinue - (PtrToUlong(alloc_ptr) + (sizeof(INJECT_PROCESSID_PAYLOAD_X86) - 12)) - 5;
 	memcpy(&payload.jmpOld[1], &dwTmpBuf, sizeof(ULONG));
 
@@ -595,7 +595,7 @@ VOID INJECT_ROUTINE_X86(
 	memcpy(&hookbuf[1], &dwTmpBuf, sizeof(ULONG));
 
 
-	//±¸·İÒ»±éÔ­µØÖ·
+	//å¤‡ä»½ä¸€éåŸåœ°å€
 	pZwContinue = (PVOID)pfnZwContinue;
 	status = pfn_NtProtectVirtualMemory(NtCurrentProcess(),
 		(PVOID*)&pfnZwContinue,
@@ -632,10 +632,10 @@ VOID INJECT_ROUTINE_X64(
 	_In_ PVOID StartContext)
 {
 	PINJECT_PROCESSID_DATA	injectdata = (PINJECT_PROCESSID_DATA)StartContext;
-	DPRINT("x64×¢Èë pid=%d %p\n", injectdata->pid, injectdata->imagebase);
+	DPRINT("x64æ³¨å…¥ pid=%d %p\n", injectdata->pid, injectdata->imagebase);
 
 	//
-	//1.attach½ø³Ì£¬2.ÕÒµ¼³ö±íZwContinue 3.×éºÏshellcode 4.ÉêÇëÄÚ´æ  5.Hook ZwContinue 
+	//1.attachè¿›ç¨‹ï¼Œ2.æ‰¾å¯¼å‡ºè¡¨ZwContinue 3.ç»„åˆshellcode 4.ç”³è¯·å†…å­˜  5.Hook ZwContinue 
 	//
 
 	ULONG			trace = 1;
@@ -665,7 +665,7 @@ VOID INJECT_ROUTINE_X64(
 	//KdBreakPoint();
 
 	//
-	//1.attach½ø³Ì
+	//1.attachè¿›ç¨‹
 	//
 	status = PsLookupProcessByProcessId(injectdata->pid, &process);
 	if (!NT_SUCCESS(status) && process == NULL)
@@ -679,7 +679,7 @@ VOID INJECT_ROUTINE_X64(
 	attach = true;
 
 	//
-	//2.ÕÒµ¼³ö±íZwContinue
+	//2.æ‰¾å¯¼å‡ºè¡¨ZwContinue
 	//
 	pfnZwContinue = GetProcAddressR((ULONG_PTR)injectdata->imagebase, "ZwContinue", true);
 	if (pfnZwContinue == NULL)
@@ -700,7 +700,7 @@ VOID INJECT_ROUTINE_X64(
 	trace = 4;
 
 	//
-	//3.¼ÆËãshellcode ´óĞ¡
+	//3.è®¡ç®—shellcode å¤§å°
 	//
 	alloc_size = sizeof(INJECT_PROCESSID_PAYLOAD_X64) + sizeof(MemLoadShellcode_x64) + g_injectDll.x64dllsize;
 
@@ -747,7 +747,7 @@ VOID INJECT_ROUTINE_X64(
 
 
 	//
-	//4.ÉêÇëÄÚ´æ
+	//4.ç”³è¯·å†…å­˜
 	//
 	status = pfn_NtAllocateVirtualMemory(NtCurrentProcess(),
 		&alloc_ptr,
@@ -767,25 +767,25 @@ VOID INJECT_ROUTINE_X64(
 	shellcodePos = dllPos + g_injectDll.x64dllsize;
 
 
-	//»Ö¸´hook
+	//æ¢å¤hook
 	dwTmpBuf = sizeof(payload.oldData);
 	memcpy(&payload.restoneHook[2], &dwTmpBuf, sizeof(ULONG64));
 	dwTmpBuf = (ULONG64)alloc_ptr + (sizeof(INJECT_PROCESSID_PAYLOAD_X64) - 16);
 	memcpy(&payload.restoneHook[12], &pfnZwContinue, sizeof(ULONG64));
 	memcpy(&payload.restoneHook[22], &dwTmpBuf, sizeof(ULONG64));
 
-	//µ÷ÓÃÄÚ´æ¼ÓÔØ
+	//è°ƒç”¨å†…å­˜åŠ è½½
 	memcpy(&payload.invokeMemLoad[2], &dllPos, sizeof(ULONG64));
 	dwTmpBuf2 = (ULONG)(shellcodePos - ((ULONG64)alloc_ptr + 0x47) - 5);
 	memcpy(&payload.invokeMemLoad[11], &dwTmpBuf2, sizeof(ULONG));
 
 
-	//²Á³ıDLL
+	//æ“¦é™¤DLL
 	dwTmpBuf = sizeof(MemLoadShellcode_x64) + g_injectDll.x64dllsize;
 	memcpy(&payload.eraseDll[2], &dllPos, sizeof(ULONG64));
 	memcpy(&payload.eraseDll[14], &dwTmpBuf, sizeof(ULONG64));
 
-	//Ìø»ØÈ¥
+	//è·³å›å»
 	memcpy(&payload.jmpOld[6], &pfnZwContinue, sizeof(ULONG64));
 
 
@@ -870,7 +870,7 @@ VOID LoadImageNotify(
 )
 {
 	//
-	//¹ıÂËsystem½ø³Ì
+	//è¿‡æ»¤systemè¿›ç¨‹
 	//
 
 	if (FullImageName == NULL ||
@@ -901,7 +901,7 @@ VOID LoadImageNotify(
 
 
 	//
-	//ÊÇ·ñÒÑ¾­´«Èë×¢ÈëDLL
+	//æ˜¯å¦å·²ç»ä¼ å…¥æ³¨å…¥DLL
 	//
 	if (x64Process)
 	{
@@ -920,7 +920,7 @@ VOID LoadImageNotify(
 
 
 	//
-	//ÊÇ·ñÒÑ¾­×¢Èë£¿
+	//æ˜¯å¦å·²ç»æ³¨å…¥ï¼Ÿ
 	//
 
 	if (QueryInjectListStatus(ProcessId))
@@ -930,7 +930,7 @@ VOID LoadImageNotify(
 
  
 	//
-	//ÊÇ·ñÊÇntdll¼ÓÔØÊ±»ú£¿
+	//æ˜¯å¦æ˜¯ntdllåŠ è½½æ—¶æœºï¼Ÿ
 	//
 
 	if (x64Process)
@@ -954,7 +954,7 @@ VOID LoadImageNotify(
 	}
 
 	//
-	//¿ªÊ¼×¢Èë
+	//å¼€å§‹æ³¨å…¥
 	//
 
 	NTSTATUS	status;
@@ -982,7 +982,7 @@ VOID LoadImageNotify(
 		injectdata);
 	if (NT_SUCCESS(status))
 	{
-		//Ìí¼Óµ½ÒÑ¾­×¢ÈëÁĞ±íÀïÃæ
+		//æ·»åŠ åˆ°å·²ç»æ³¨å…¥åˆ—è¡¨é‡Œé¢
 		SetInjectListStatus(ProcessId);
 
 		if (NT_SUCCESS(ObReferenceObjectByHandle(thread_hanlde, THREAD_ALL_ACCESS, NULL, KernelMode, &thread_object, NULL)))
@@ -1018,7 +1018,7 @@ VOID CreateProcessNotify(
 
 
 	//
-	//Èç¹û½ø³ÌÏú»Ù Ôò´Ó×¢ÈëÁĞ±íÀïÃæÒÆ³ı
+	//å¦‚æœè¿›ç¨‹é”€æ¯ åˆ™ä»æ³¨å…¥åˆ—è¡¨é‡Œé¢ç§»é™¤
 	//
 	if (Create)
 	{
